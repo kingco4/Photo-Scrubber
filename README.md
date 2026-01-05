@@ -1,8 +1,7 @@
-sourc# Scubber
+A web-app using React + Python (FastAPI) to scrub unwanted content from photos:
 
-React front-end + Python (FastAPI) back-end to scrub unwanted content from photos:
 - **Remove text**: OCR (Tesseract) → mask → OpenCV inpaint
-- **Blur people**: face detection (Haar) and optional full-body detection (HOG) → Gaussian blur
+- **Blur people**: face detection and optional full-body detection
 
 ## Project layout
 

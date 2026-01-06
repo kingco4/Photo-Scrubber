@@ -58,9 +58,9 @@ export default function App() {
   return (
     <div className="container">
       <div className="card">
-        <div className="h1">Scubber</div>
+        <div className="h1">Photo Scubber</div>
         <p className="p">
-          Upload a photo, then scrub text and/or blur background people. Runs locally using React for front-end and FastAPI on the back-end.
+          Upload a photo, then scrub text and/or blur background people. Runs locally using React on the front-end and FastAPI on the back-end.
         </p>
 
         <div className="row">
@@ -78,12 +78,12 @@ export default function App() {
 
               <label>
                 <input type="checkbox" checked={removeText} onChange={(e) => setRemoveText(e.target.checked)} />
-                Remove text (OCR + inpaint)
+                Remove text
               </label>
 
               <label>
                 <input type="checkbox" checked={blurPeople} onChange={(e) => setBlurPeople(e.target.checked)} />
-                Blur people (face detect)
+                Blur people
               </label>
 
               <label style={{ paddingLeft: 24 }}>

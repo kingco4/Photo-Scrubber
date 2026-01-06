@@ -15,7 +15,6 @@ from PIL import Image
 
 app = FastAPI(title="Scubber API", version="0.1.0")
 
-# Allow local dev frontend
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["http://localhost:5173", "http://127.0.0.1:5173"],
@@ -42,14 +41,12 @@ def _bgr_to_png_bytes(bgr: np.ndarray) -> bytes:
 
 
 def _blur_region(bgr: np.ndarray, x: int, y: int, w: int, h: int, k: int) -> None:
-    # clamp
     H, W = bgr.shape[:2]
     x1, y1 = max(0, x), max(0, y)
     x2, y2 = min(W, x + w), min(H, y + h)
     if x2 <= x1 or y2 <= y1:
         return
     roi = bgr[y1:y2, x1:x2]
-    # kernel size must be odd and >= 3
     k = max(3, int(k) | 1)
     bgr[y1:y2, x1:x2] = cv2.GaussianBlur(roi, (k, k), 0)
 
@@ -59,7 +56,6 @@ class Options:
     blur_people: bool
     remove_text: bool
     blur_strength: int
-    # whether to prefer full-body detector (slower) in addition to face detection
     detect_bodies: bool
 
 
@@ -70,10 +66,9 @@ def scrub_text(bgr: np.ndarray) -> np.ndarray:
     """Detect text with Tesseract and inpaint it."""
     rgb = cv2.cvtColor(bgr, cv2.COLOR_BGR2RGB)
 
-    # Tesseract works best on slightly processed images
+
     gray = cv2.cvtColor(bgr, cv2.COLOR_BGR2GRAY)
     gray = cv2.bilateralFilter(gray, 7, 50, 50)
-    # Keep original RGB for OCR (better on color sometimes)
     data = pytesseract.image_to_data(rgb, output_type=pytesseract.Output.DICT)
 
     mask = np.zeros(gray.shape, dtype=np.uint8)
@@ -87,12 +82,11 @@ def scrub_text(bgr: np.ndarray) -> np.ndarray:
         except Exception:
             conf = -1.0
 
-        # Filter: real text + decent confidence
         if not txt or conf < 60:
             continue
 
         x, y, w, h = data["left"][i], data["top"][i], data["width"][i], data["height"][i]
-        # expand a little to avoid leaving halos
+
         pad = max(2, int(min(w, h) * 0.15))
         x2 = max(0, x - pad)
         y2 = max(0, y - pad)
@@ -103,7 +97,7 @@ def scrub_text(bgr: np.ndarray) -> np.ndarray:
     if mask.max() == 0:
         return bgr
 
-    # Inpaint using Telea method
+    
     inpainted = cv2.inpaint(bgr, mask, inpaintRadius=3, flags=cv2.INPAINT_TELEA)
     return inpainted
 
@@ -112,20 +106,16 @@ def scrub_people(bgr: np.ndarray, blur_strength: int, detect_bodies: bool) -> np
     """Blur likely background people. Uses face detection (fast) and optional HOG person detector."""
     out = bgr.copy()
 
-    # Face detector (Haar cascade)
     face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + "haarcascade_frontalface_default.xml")
     gray = cv2.cvtColor(out, cv2.COLOR_BGR2GRAY)
     faces = face_cascade.detectMultiScale(gray, scaleFactor=1.1, minNeighbors=5, minSize=(24, 24))
     for (x, y, w, h) in faces:
-        # expand slightly to cover hair/edges
         pad = int(0.25 * w)
         _blur_region(out, x - pad, y - pad, w + 2 * pad, h + 2 * pad, blur_strength)
 
     if detect_bodies:
-        # HOG person detector (slower, but good enough for simple cases)
         hog = cv2.HOGDescriptor()
         hog.setSVMDetector(cv2.HOGDescriptor_getDefaultPeopleDetector())
-        # Downscale for speed
         scale = 0.75 if max(out.shape[:2]) > 900 else 1.0
         small = cv2.resize(out, None, fx=scale, fy=scale, interpolation=cv2.INTER_AREA) if scale != 1.0 else out
         rects, weights = hog.detectMultiScale(small, winStride=(8, 8), padding=(8, 8), scale=1.05)
@@ -133,7 +123,6 @@ def scrub_people(bgr: np.ndarray, blur_strength: int, detect_bodies: bool) -> np
         for (x, y, w, h), wt in zip(rects, weights):
             if wt < 0.5:
                 continue
-            # map back to original coords
             if scale != 1.0:
                 x, y, w, h = int(x / scale), int(y / scale), int(w / scale), int(h / scale)
             _blur_region(out, x, y, w, h, blur_strength)

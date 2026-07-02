@@ -1,0 +1,20 @@
+@media (max-width: 720px) {
+  .authPanel,
+  .liveHeader {
+    flex-direction: column;
+  }
+
+  .authForm {
+    width: 100%;
+    justify-content: stretch;
+  }
+
+  .authForm input,
+  .authForm button {
+    width: 100%;
+  }
+
+  .liveGrid {
+    grid-template-columns: 1fr;
+  }
+}

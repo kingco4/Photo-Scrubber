@@ -1,0 +1,11 @@
+export const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:8000'
+export const MAX_UPLOAD_BYTES = 15 * 1024 * 1024
+export const MIN_IMAGE_WIDTH = 16
+export const MIN_IMAGE_HEIGHT = 16
+export const MAX_IMAGE_WIDTH = 8000
+export const MAX_IMAGE_HEIGHT = 8000
+export const DEFAULT_LIVE_MAX_DIMENSION = 960
+export const DEFAULT_LIVE_JPEG_QUALITY = 72
+export const DEFAULT_LIVE_INTERVAL_MS = 300
+export const DEFAULT_SCRUB_ESTIMATE_MS = 4000
+export const VALIDATION_SKIP_THRESHOLD = 20
